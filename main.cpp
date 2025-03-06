@@ -4,6 +4,7 @@
 #include <string>
 
 #include "Emulator.hpp"
+#include "HelpFunctions.hpp"
 
 using namespace std;
 
@@ -24,13 +25,14 @@ int main() {
 			++count_commands;
 		}
 		else if (point_pos != string::npos) {
-			auto label = line.substr(0, line.back());
+			auto label = line.substr(0, line.find(":"));
 			if (commands.find(label) == commands.end()) {
 				++count_commands;
 				commands[label] = count_commands;
-			}
-			else {
-				++count_commands;
+				count_commands_real += 1;
+				real_commands[count_commands] = count_commands_real;
+				asm_code += label + "\n";
+				continue;
 			}
 		}
 		else {
@@ -38,11 +40,11 @@ int main() {
 			++count_commands;
 		}
 
-		if (line.find("jmp") != string::npos || line.find("mov") != string::npos || line.find("add") != string::npos) {
+		if (line.find("jcn") != string::npos) {
 			count_commands_real += 3;
 			real_commands[count_commands] = count_commands_real;
 		}
-		else if (line.find("nop") != string::npos || line.find("hlt") != string::npos) {
+		else if (line.find("nop") != string::npos || line.find("hlt") != string::npos || line.find("clc") != string::npos || line.find("stc") != string::npos) {
 			count_commands_real += 1;
 			real_commands[count_commands] = count_commands_real;
 		}
@@ -54,6 +56,8 @@ int main() {
 
 	em.load_program(em.assemble(asm_code));
 	em.run();
+
+	cout << em.get_acc() << endl;;
 
 	return 0;
 }

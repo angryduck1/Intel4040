@@ -131,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Emulator.hpp" />
+    <ClInclude Include="HelpFunctions.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="main.asm" />
