@@ -70,6 +70,7 @@ map<string, Assembler> opcode_map = {
 	{"jun", jun},
 	{"xch", xch},
 	{"clc", stc},
+	{"sub", sub},
 	{"rr0", rr0},
 	{"rr1", rr1},
 	{"rr2", rr2},
@@ -656,6 +657,110 @@ public:
 					break;
 				}
 
+				}
+
+				break;
+			}
+			case sub: {
+				int value = rom[++p.pc];
+
+				switch (value) {
+				case rr0: {
+					a.ac -= r.rr0;
+					break;
+				}
+				case rr1: {
+					a.ac -= r.rr1;
+					break;
+				}
+				case rr2: {
+					a.ac -= r.rr2;
+					break;
+				}
+				case rr3: {
+					a.ac -= r.rr3;
+					break;
+				}
+				case rr4: {
+					a.ac -= r.rr4;
+					break;
+				}
+				case rr5: {
+					a.ac -= r.rr5;
+					break;
+				}
+				case rr6: {
+					a.ac -= r.rr6;
+					break;
+				}
+				case rr7: {
+					a.ac -= r.rr7;
+					break;
+				}
+				case rr8: {
+					a.ac -= r.rr8;
+					break;
+				}
+				case rr9: {
+					a.ac -= r.rr9;
+					break;
+				}
+				case rr10: {
+					a.ac -= r.rr10;
+					break;
+				}
+				case rr11: {
+					a.ac -= r.rr11;
+					break;
+				}
+				case rr12: {
+					a.ac -= r.rr12;
+					break;
+				}
+				case rr13: {
+					a.ac -= r.rr13;
+					break;
+				}
+				case rr14: {
+					a.ac -= r.rr14;
+					break;
+				}
+				case rr15: {
+					a.ac -= r.rr15;
+					break;
+				}
+				case rr16: {
+					a.ac -= r.rr16;
+					break;
+				}
+				case rr17: {
+					a.ac -= r.rr17;
+					break;
+				}
+				case rr18: {
+					a.ac -= r.rr18;
+					break;
+				}
+				case rr19: {
+					a.ac -= r.rr19;
+					break;
+				}
+				case rr20: {
+					a.ac -= r.rr20;
+					break;
+				}
+				case rr21: {
+					a.ac -= r.rr21;
+					break;
+				}
+				case rr22: {
+					a.ac -= r.rr22;
+					break;
+				}
+				case rr23: {
+					a.ac -= r.rr23;
+					break;
+				}
 				}
 
 				break;

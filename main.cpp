@@ -4,7 +4,6 @@
 #include <string>
 
 #include "Emulator.hpp"
-#include "HelpFunctions.hpp"
 
 using namespace std;
 
