@@ -43,7 +43,7 @@ int main() {
 			count_commands_real += 3;
 			real_commands[count_commands] = count_commands_real;
 		}
-		else if (line.find("nop") != string::npos || line.find("hlt") != string::npos || line.find("clc") != string::npos || line.find("stc") != string::npos) {
+		else if (line.find("nop") != string::npos || line.find("hlt") != string::npos || line.find("clc") != string::npos || line.find("stc") != string::npos || line.find("ret") != string::npos) {
 			count_commands_real += 1;
 			real_commands[count_commands] = count_commands_real;
 		}

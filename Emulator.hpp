@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <stack>
+#include <algorithm>
 
 using namespace std;
 
@@ -11,9 +13,6 @@ unsigned count_commands_real = 0;
 unsigned count_commands = 0;
 map<unsigned, unsigned> real_commands;
 map<string, unsigned> commands;
-
-vector<uint16_t> rom;
-bool is_halted = false;
 
 enum Assembler : uint16_t {
 	jcn = 1000,
@@ -34,6 +33,8 @@ enum Assembler : uint16_t {
 	clc,
 	hlt,
 	stc,
+	call,
+	ret,
 
 	rr0,
 	rr1,
@@ -71,6 +72,8 @@ map<string, Assembler> opcode_map = {
 	{"xch", xch},
 	{"clc", stc},
 	{"sub", sub},
+	{"call", call},
+	{"ret", ret},
 	{"rr0", rr0},
 	{"rr1", rr1},
 	{"rr2", rr2},
@@ -137,6 +140,11 @@ public:
 	};
 
 	bool carry = false;
+	bool is_halted = false;
+
+	vector<uint16_t> stack;
+
+	vector<uint16_t> rom;
 
 	std::vector<uint16_t> assemble(const std::string& asm_code) {
 		std::vector<uint16_t> instructions;
@@ -161,7 +169,7 @@ public:
 	}
 
 	void load_program(vector<uint16_t> instructions) {
-		rom.resize(20);
+		rom.resize(60);
 		this->instructions = instructions;
 
 		for (size_t i = 0; i < instructions.size(); i++) {
@@ -340,7 +348,12 @@ public:
 
 	int run() {
 		uint16_t opcode = rom[p.pc];
-		while (is_halted != true && p.pc < instructions.size() - 1) {
+		while (is_halted != true && p.pc < instructions.size()) {
+			if (stack.size() > 7) {
+				for (size_t i = 0; i < 5; i++) {
+					stack[i] = stack[i + 1];
+				}
+			}
 			switch (opcode) {
 			case hlt: {
 				is_halted = true;
@@ -369,6 +382,22 @@ public:
 				int value = real_commands[rom[++p.pc]] - 1;
 
 				p.pc = value;
+
+				break;
+			}
+			case call: {
+				stack.push_back(p.pc + 1);
+
+				int value = real_commands[rom[++p.pc]] - 1;
+
+				p.pc = value;
+
+				break;
+			}
+			case ret: {
+				p.pc = stack.back();
+
+				stack.pop_back();
 
 				break;
 			}
