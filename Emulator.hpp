@@ -3,16 +3,17 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <utility>
-#include <stack>
-#include <algorithm>
 
 using namespace std;
+
+//
 
 unsigned count_commands_real = 0;
 unsigned count_commands = 0;
 map<unsigned, unsigned> real_commands;
 map<string, unsigned> commands;
+
+//
 
 enum Assembler : uint16_t {
 	jcn = 1000,
@@ -35,6 +36,8 @@ enum Assembler : uint16_t {
 	stc,
 	call,
 	ret,
+	iac,
+	dac,
 
 	rr0,
 	rr1,
@@ -60,7 +63,10 @@ enum Assembler : uint16_t {
 	rr21,
 	rr22,
 	rr23,
-	ac
+	ac,
+	c2,
+	c3,
+	c4
 };
 
 map<string, Assembler> opcode_map = {
@@ -74,6 +80,11 @@ map<string, Assembler> opcode_map = {
 	{"sub", sub},
 	{"call", call},
 	{"ret", ret},
+	{"stc", stc},
+	{"inc", inc},
+	{"iac", iac},
+	{"dac", dac},
+	{"jcn", jcn},
 	{"rr0", rr0},
 	{"rr1", rr1},
 	{"rr2", rr2},
@@ -97,7 +108,10 @@ map<string, Assembler> opcode_map = {
 	{"rr20", rr20},
 	{"rr21", rr21},
 	{"rr22", rr22},
-	{"rr23", rr23}
+	{"rr23", rr23},
+	{"c2", c2},
+	{"c3", c3},
+	{"c4", c4}
 };
 
 class Emulator {
@@ -139,6 +153,10 @@ public:
 		uint16_t pc : 12;
 	};
 
+	struct Pins {
+		bool test = 0;
+	};
+
 	bool carry = false;
 	bool is_halted = false;
 
@@ -169,7 +187,7 @@ public:
 	}
 
 	void load_program(vector<uint16_t> instructions) {
-		rom.resize(60);
+		rom.resize(70);
 		this->instructions = instructions;
 
 		for (size_t i = 0; i < instructions.size(); i++) {
@@ -181,134 +199,113 @@ public:
 		}
 	}
 
-	uint8_t get_acc() {
-		std::cout << static_cast<int>(a.ac) << std::endl;
-		return a.ac;
+	Registers r;
+	Accumulator a;
+	PointerCounter p;
+	Pins pin;
+
+	int get_acc() {
+		return static_cast<int>(a.ac);
 	}
 
 	bool get_carry() {
-		std::cout << carry << std::endl;
 		return carry;
 	}
 
-	uint8_t get_rr0() {
-		std::cout << static_cast<int>(r.rr0) << std::endl;
-		return r.rr0;
+	int get_rr0() {
+		return static_cast<int>(r.rr0);
 	}
 
-	uint8_t get_rr1() {
-		std::cout << static_cast<int>(r.rr1) << std::endl;
-		return r.rr1;
+	int get_rr1() {
+		return static_cast<int>(r.rr1);
 	}
 
-	uint8_t get_rr2() {
-		std::cout << static_cast<int>(r.rr2) << std::endl;
-		return r.rr2;
+	int get_rr2() {
+		return static_cast<int>(r.rr2);
 	}
 
-	uint8_t get_rr3() {
-		std::cout << static_cast<int>(r.rr3) << std::endl;
-		return r.rr3;
+	int get_rr3() {
+		return static_cast<int>(r.rr3);
 	}
 
-	uint8_t get_rr4() {
-		std::cout << static_cast<int>(r.rr4) << std::endl;
-		return r.rr4;
+	int get_rr4() {
+		return static_cast<int>(r.rr4);
 	}
 
-	uint8_t get_rr5() {
-		std::cout << static_cast<int>(r.rr5) << std::endl;
-		return r.rr5;
+	int get_rr5() {
+		return static_cast<int>(r.rr5);
 	}
 
-	uint8_t get_rr6() {
-		std::cout << static_cast<int>(r.rr6) << std::endl;
-		return r.rr6;
+	int get_rr6() {
+		return static_cast<int>(r.rr6);
 	}
 
-	uint8_t get_rr7() {
-		std::cout << static_cast<int>(r.rr7) << std::endl;
-		return r.rr7;
+	int get_rr7() {
+		return static_cast<int>(r.rr7);
 	}
 
-	uint8_t get_rr8() {
-		std::cout << static_cast<int>(r.rr8) << std::endl;
-		return r.rr8;
+	int get_rr8() {
+		return static_cast<int>(r.rr8);
 	}
 
-	uint8_t get_rr9() {
-		std::cout << static_cast<int>(r.rr9) << std::endl;
-		return r.rr9;
+	int get_rr9() {
+		return static_cast<int>(r.rr9);
 	}
 
-	uint8_t get_rr10() {
-		std::cout << static_cast<int>(r.rr10) << std::endl;
-		return r.rr10;
+	int get_rr10() {
+		return static_cast<int>(r.rr10);
 	}
 
-	uint8_t get_rr11() {
-		std::cout << static_cast<int>(r.rr11) << std::endl;
-		return r.rr11;
+	int get_rr11() {
+		return static_cast<int>(r.rr11);
 	}
 
-	uint8_t get_rr12() {
-		std::cout << static_cast<int>(r.rr12) << std::endl;
-		return r.rr12;
+	int get_rr12() {
+		return static_cast<int>(r.rr12);
 	}
 
-	uint8_t get_rr13() {
-		std::cout << static_cast<int>(r.rr13) << std::endl;
-		return r.rr13;
+	int get_rr13() {
+		return static_cast<int>(r.rr13);
 	}
 
-	uint8_t get_rr14() {
-		std::cout << static_cast<int>(r.rr14) << std::endl;
-		return r.rr14;
+	int get_rr14() {
+		return static_cast<int>(r.rr14);
 	}
 
-	uint8_t get_rr15() {
-		std::cout << static_cast<int>(r.rr15) << std::endl;
-		return r.rr15;
+	int get_rr15() {
+		return static_cast<int>(r.rr15);
 	}
 
-	uint8_t get_rr16() {
-		std::cout << static_cast<int>(r.rr16) << std::endl;
-		return r.rr16;
+	int get_rr16() {
+		return static_cast<int>(r.rr16);
 	}
 
-	uint8_t get_rr17() {
-		std::cout << static_cast<int>(r.rr17) << std::endl;
-		return r.rr17;
+	int get_rr17() {
+		return static_cast<int>(r.rr17);
 	}
 
-	uint8_t get_rr18() {
-		std::cout << static_cast<int>(r.rr18) << std::endl;
-		return r.rr18;
+	int get_rr18() {
+		return static_cast<int>(r.rr18);
 	}
 
-	uint8_t get_rr19() {
-		std::cout << static_cast<int>(r.rr19) << std::endl;
-		return r.rr19;
+	int get_rr19() {
+		return static_cast<int>(r.rr19);
 	}
 
-	uint8_t get_rr20() {
-		std::cout << static_cast<int>(r.rr20) << std::endl;
-		return r.rr20;
+	int get_rr20() {
+		return static_cast<int>(r.rr20);
 	}
 
-	uint8_t get_rr21() {
-		std::cout << static_cast<int>(r.rr21) << std::endl;
-		return r.rr21;
+	int get_rr21() {
+		return static_cast<int>(r.rr21);
 	}
 
-	uint8_t get_rr22() {
-		std::cout << static_cast<int>(r.rr22) << std::endl;
-		return r.rr22;
+	int get_rr22() {
+		return static_cast<int>(r.rr22);
 	}
 
-	uint8_t get_rr23() {
-		std::cout << static_cast<int>(r.rr23) << std::endl;
-		return r.rr23;
+	int get_rr23() {
+		return static_cast<int>(r.rr23);
 	}
 
 	unsigned get_counter() {
@@ -318,10 +315,6 @@ public:
 	unsigned get_really_counter() {
 		return count_commands_real;
 	}
-
-	Registers r;
-	Accumulator a;
-	PointerCounter p;
 
 	Emulator() {
 		a.ac = 0;
@@ -353,6 +346,7 @@ public:
 				for (size_t i = 0; i < 5; i++) {
 					stack[i] = stack[i + 1];
 				}
+				stack.pop_back();
 			}
 			switch (opcode) {
 			case hlt: {
@@ -379,9 +373,60 @@ public:
 				break;
 			}
 			case jun: {
-				int value = real_commands[rom[++p.pc]] - 1;
+				int address = real_commands[rom[++p.pc]] - 1;
 
-				p.pc = value;
+				p.pc = address;
+
+				break;
+			}
+			case jcn: {
+				int condition = rom[++p.pc];
+				int address = real_commands[rom[++p.pc]] - 1;
+
+				if (carry == false) {
+					switch (condition) {
+					case c2: {
+						if (a.ac == 0) {
+							p.pc = address;
+						}
+						break;
+					}
+					case c3: {
+						if (carry == true) {
+							p.pc = address;
+						}
+						break;
+					}
+					case c4: {
+						if (pin.test == 0) {
+							p.pc = address;
+						}
+						break;
+					}
+					}
+				}
+				else {
+					switch (condition) {
+					case c2: {
+						if (a.ac != 0) {
+							p.pc = address;
+						}
+						break;
+					}
+					case c3: {
+						if (carry == false) {
+							p.pc = address;
+						}
+						break;
+					}
+					case c4: {
+						if (pin.test == 1) {
+							p.pc = address;
+						}
+						break;
+					}
+					}
+				}
 
 				break;
 			}
@@ -531,9 +576,171 @@ public:
 				if (ac + value > 15) {
 					carry = true;
 				}
-				else if (ac + value <= 15) {
+				else {
 					carry = false;
 				}
+
+				break;
+			}
+			case inc: {
+				int value = rom[++p.pc];
+				int result;
+
+				switch (value) {
+				case rr0: {
+					result = r.rr0;
+					++r.rr0;
+					break;
+				}
+				case rr1: {
+					result = r.rr1;
+					++r.rr1;
+					break;
+				}
+				case rr2: {
+					result = r.rr2;
+					++r.rr2;
+					break;
+				}
+				case rr3: {
+					result = r.rr3;
+					++r.rr4;
+					break;
+				}
+				case rr4: {
+					result = r.rr4;
+					++r.rr4;
+					break;
+				}
+				case rr5: {
+					result = r.rr5;
+					++r.rr5;
+					break;
+				}
+				case rr6: {
+					result = r.rr6;
+					++r.rr6;
+					break;
+				}
+				case rr7: {
+					result = r.rr7;
+					++r.rr7;
+					break;
+				}
+				case rr8: {
+					result = r.rr8;
+					++r.rr8;
+					break;
+				}
+				case rr9: {
+					result = r.rr9;
+					++r.rr9;
+					break;
+				}
+				case rr10: {
+					result = r.rr10;
+					++r.rr10;
+					break;
+				}
+				case rr11: {
+					result = r.rr11;
+					++r.rr11;
+					break;
+				}
+				case rr12: {
+					result = r.rr12;
+					++r.rr12;
+					break;
+				}
+				case rr13: {
+					result = r.rr13;
+					++r.rr13;
+					break;
+				}
+				case rr14: {
+					result = r.rr14;
+					++r.rr14;
+					break;
+				}
+				case rr15: {
+					result = r.rr15;
+					++r.rr15;
+					break;
+				}
+				case rr16: {
+					result = r.rr16;
+					++r.rr16;
+					break;
+				}
+				case rr17: {
+					result = r.rr17;
+					++r.rr17;
+					break;
+				}
+				case rr18: {
+					result = r.rr18;
+					++r.rr18;
+					break;
+				}
+				case rr19: {
+					result = r.rr19;
+					++r.rr19;
+					break;
+				}
+				case rr20: {
+					result = r.rr20;
+					++r.rr20;
+					break;
+				}
+				case rr21: {
+					result = r.rr21;
+					++r.rr21;
+					break;
+				}
+				case rr22: {
+					result = r.rr22;
+					++r.rr22;
+					break;
+				}
+				case rr23: {
+					result = r.rr23;
+					++r.rr23;
+					break;
+				}
+
+				}
+
+				if (++result > 15) {
+					carry = true;
+				}
+				else {
+					carry = false;
+				}
+
+				break;
+			}
+			case dac: {
+				uint8_t value = a.ac;
+				if (--value < 0) {
+					carry = true;
+				}
+				else {
+					carry = false;
+				}
+				--a.ac;
+
+				break;
+			}
+			case iac: {
+				uint8_t value = a.ac;
+
+				if (++value > 15) {
+					carry = true;
+				}
+				else {
+					carry = false;
+				}
+				++a.ac;
 
 				break;
 			}
@@ -692,104 +899,136 @@ public:
 			}
 			case sub: {
 				int value = rom[++p.pc];
+				int8_t result = a.ac;
 
 				switch (value) {
 				case rr0: {
 					a.ac -= r.rr0;
+					value = r.rr0;
 					break;
 				}
 				case rr1: {
 					a.ac -= r.rr1;
+					value = r.rr1;
 					break;
 				}
 				case rr2: {
 					a.ac -= r.rr2;
+					value = r.rr2;
 					break;
 				}
 				case rr3: {
 					a.ac -= r.rr3;
+					value = r.rr3;
 					break;
 				}
 				case rr4: {
 					a.ac -= r.rr4;
+					value = r.rr4;
 					break;
 				}
 				case rr5: {
 					a.ac -= r.rr5;
+					value = r.rr5;
 					break;
 				}
 				case rr6: {
 					a.ac -= r.rr6;
+					value = r.rr6;
 					break;
 				}
 				case rr7: {
 					a.ac -= r.rr7;
+					value = r.rr7;
 					break;
 				}
 				case rr8: {
 					a.ac -= r.rr8;
+					value = r.rr8;
 					break;
 				}
 				case rr9: {
 					a.ac -= r.rr9;
+					value = r.rr9;
 					break;
 				}
 				case rr10: {
 					a.ac -= r.rr10;
+					value = r.rr10;
 					break;
 				}
 				case rr11: {
 					a.ac -= r.rr11;
+					value = r.rr11;
 					break;
 				}
 				case rr12: {
 					a.ac -= r.rr12;
+					value = r.rr12;
 					break;
 				}
 				case rr13: {
 					a.ac -= r.rr13;
+					value = r.rr13;
 					break;
 				}
 				case rr14: {
 					a.ac -= r.rr14;
+					value = r.rr14;
 					break;
 				}
 				case rr15: {
 					a.ac -= r.rr15;
+					value = r.rr15;
 					break;
 				}
 				case rr16: {
 					a.ac -= r.rr16;
+					value = r.rr16;
 					break;
 				}
 				case rr17: {
 					a.ac -= r.rr17;
+					value = r.rr17;
 					break;
 				}
 				case rr18: {
 					a.ac -= r.rr18;
+					value = r.rr18;
 					break;
 				}
 				case rr19: {
 					a.ac -= r.rr19;
+					value = r.rr19;
 					break;
 				}
 				case rr20: {
 					a.ac -= r.rr20;
+					value = r.rr20;
 					break;
 				}
 				case rr21: {
 					a.ac -= r.rr21;
+					value = r.rr21;
 					break;
 				}
 				case rr22: {
 					a.ac -= r.rr22;
+					value = r.rr22;
 					break;
 				}
 				case rr23: {
 					a.ac -= r.rr23;
+					value = r.rr23;
 					break;
 				}
+				}
+
+				if (result - value < 0) {
+					carry = true;
+				}
+				else {
+					carry = false;
 				}
 
 				break;
