@@ -131,7 +131,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Emulator.hpp" />
-    <ClInclude Include="Display.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="main.i4040" />

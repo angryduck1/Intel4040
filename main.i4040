@@ -1,8 +1,2 @@
 main:
-  ldm 15
-  jcn c3 test
-  ldm 9
-  hlt
-test:
-  ldm 10
   hlt

@@ -3,13 +3,12 @@
 #include <fstream>
 #include <string>
 
-#include "Display.hpp"
+#include "Emulator.hpp"
 
 using namespace std;
 
 int main() {
 	Emulator em;
-	Display ds;
 
 	ifstream inFile("main.i4040");
 
@@ -40,7 +39,7 @@ int main() {
 			++count_commands;
 		}
 
-		if (line.find("jcn") != string::npos) {
+		if (line.find("jcn") != string::npos || line.find("isz") != string::npos) {
 			count_commands_real += 3;
 			real_commands[count_commands] = count_commands_real;
 		}
