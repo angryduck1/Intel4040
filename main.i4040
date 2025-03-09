@@ -1,2 +1,3 @@
 main:
-  hlt
+  stc
+  ldm 10

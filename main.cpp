@@ -21,35 +21,28 @@ int main() {
 		if (comment_pos != string::npos) {
 			line = line.substr(0, comment_pos);
 			asm_code += line = "\n";
-			++count_commands;
 		}
 		else if (point_pos != string::npos) {
 			auto label = line.substr(0, line.find(":"));
 			if (commands.find(label) == commands.end()) {
-				++count_commands;
-				commands[label] = count_commands;
-				count_commands_real += 1;
-				real_commands[count_commands] = count_commands_real;
+				++pre_pc;
+				commands[label] = pre_pc;
 				asm_code += label + "\n";
 				continue;
 			}
 		}
 		else {
 			asm_code += line + "\n";
-			++count_commands;
 		}
 
 		if (line.find("jcn") != string::npos || line.find("isz") != string::npos) {
-			count_commands_real += 3;
-			real_commands[count_commands] = count_commands_real;
+			pre_pc += 3;
 		}
-		else if (line.find("nop") != string::npos || line.find("hlt") != string::npos || line.find("clc") != string::npos || line.find("stc") != string::npos || line.find("ret") != string::npos || line.find("iac") != string::npos || line.find("dac") != string::npos) {
-			count_commands_real += 1;
-			real_commands[count_commands] = count_commands_real;
+		else if (line.find("nop") != string::npos || line.find("hlt") != string::npos || line.find("clc") != string::npos || line.find("stc") != string::npos || line.find("iac") != string::npos || line.find("dac") != string::npos || line.find("clb") != string::npos) {
+			++pre_pc;
 		}
 		else {
-			count_commands_real += 2;
-			real_commands[count_commands] = count_commands_real;
+			pre_pc += 2;
 		}
 	}
 

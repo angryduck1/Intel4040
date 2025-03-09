@@ -8,9 +8,7 @@ using namespace std;
 
 //
 
-unsigned count_commands_real = 0;
-unsigned count_commands = 0;
-map<unsigned, unsigned> real_commands;
+unsigned pre_pc = 0;
 map<string, unsigned> commands;
 
 //
@@ -63,10 +61,8 @@ enum Assembler : uint16_t {
 	clc,
 	hlt,
 	stc,
-	call,
-	ret,
 	iac,
-	dac
+	dac,
 };
 
 map<string, Assembler> opcode_map = {
@@ -78,8 +74,8 @@ map<string, Assembler> opcode_map = {
 	{"xch", xch},
 	{"clc", stc},
 	{"sub", sub},
-	{"call", call},
-	{"ret", ret},
+	{"jms", jms},
+	{"bbl", bbl},
 	{"stc", stc},
 	{"inc", inc},
 	{"iac", iac},
@@ -87,6 +83,8 @@ map<string, Assembler> opcode_map = {
 	{"jcn", jcn},
 	{"isz", isz},
 	{"fim", fim},
+	{"ld", ld},
+	{"clb", clb},
 	{"rr0", rr0},
 	{"rr1", rr1},
 	{"rr2", rr2},
@@ -283,14 +281,6 @@ public:
 		return static_cast<int>(rr[23]);
 	}
 
-	unsigned get_counter() {
-		return count_commands;
-	}
-
-	unsigned get_really_counter() {
-		return count_commands_real;
-	}
-
 	Emulator() {
 		a.ac = 0;
 
@@ -337,7 +327,7 @@ public:
 				break;
 			}
 			case jun: {
-				int address = real_commands[rom[++p.pc]] - 1;
+				int address = rom[++p.pc] - 1;
 
 				p.pc = address;
 
@@ -345,7 +335,7 @@ public:
 			}
 			case jcn: {
 				int condition = rom[++p.pc];
-				int address = real_commands[rom[++p.pc]] - 1;
+				int address = rom[++p.pc] - 1;
 
 				if (carry == false) {
 					switch (condition) {
@@ -396,7 +386,7 @@ public:
 			}
 			case isz: {
 				int value = rom[++p.pc];
-				int address = real_commands[rom[++p.pc]] - 1;
+				int address = rom[++p.pc] - 1;
 
 				++rr[value - 64386];
 
@@ -417,19 +407,32 @@ public:
 
 				break;
 			}
-			case call: {
+			case jms: {
 				stack.push_back(p.pc + 1);
 
-				int value = real_commands[rom[++p.pc]] - 1;
+				int value = rom[++p.pc] - 1;
 
 				p.pc = value;
 
 				break;
 			}
-			case ret: {
+			case bbl: {
+				a.ac = rom[++p.pc];
+
 				p.pc = stack.back();
 
 				stack.pop_back();
+
+				break;
+			}
+			case clb: {
+				a.ac = 0;
+				carry = false;
+
+				break;
+			}
+			case ld: {
+				a.ac = rr[rom[++p.pc] - 64386];
 
 				break;
 			}
