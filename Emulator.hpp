@@ -9,12 +9,14 @@ using namespace std;
 //
 
 unsigned pre_pc = 0;
+unsigned label_support = 0;
 map<string, unsigned> commands;
+map<unsigned, unsigned> commands_support;
 
 //
 
 enum Assembler : uint16_t {
-	rr0 = 64386,
+	rr0 = 0,
 	rr1,
 	rr2,
 	rr3,
@@ -38,31 +40,31 @@ enum Assembler : uint16_t {
 	rr21,
 	rr22,
 	rr23,
-	ac,
+	ac = 1,
 	c2,
 	c3,
 	c4,
 
-	jcn,
-	fim,
-	fin,
-	jin,
-	jun,
-	jms,
-	inc,
-	isz,
-	add,
-	sub,
-	ld,
-	xch,
-	bbl,
-	ldm,
-	clb,
-	clc,
-	hlt,
-	stc,
-	iac,
-	dac,
+	jcn = 0x01,
+	fim = 0x02,
+	fin = 0x03,
+	jun = 0x04,
+	jms = 0x05,
+	inc = 0x06,
+	isz = 0x07,
+	add = 0x08,
+	sub = 0x09,
+	ld = 0xA,
+	xch = 0xB,
+	bbl = 0xC,
+	ldm = 0xD,
+	clb = 0xF,
+	clc = 0xF1,
+	iac = 0xF2,
+	dac = 0xF8,
+	stc = 0xFA,
+
+	hlt = 0x010,
 };
 
 map<string, Assembler> opcode_map = {
@@ -144,15 +146,75 @@ public:
 		std::string token;
 
 		while (stream >> token) {
-			try {
-				if (opcode_map.find(token) != opcode_map.end()) {
+			if (opcode_map.find(token) != opcode_map.end()) {
+				if (token.find("jcn") != string::npos || token.find("isz") != string::npos) {
+					uint8_t temp_value = opcode_map[token];
+
+					uint8_t high_bit = temp_value;
+					stream >> token;
+
+					uint8_t low_bit = opcode_map[token];
+					uint8_t value = (high_bit << 4) | low_bit;
+
+					instructions.push_back(value);
+
+					stream >> token;
+					int16_t address = commands[token] & 0xFFF;
+
+					instructions.push_back(address);
+				}
+				else if (token.find("fim") != string::npos) {
+					uint8_t temp_value = opcode_map[token];
+
+					uint8_t high_bit = temp_value;
+					stream >> token;
+
+					uint8_t low_bit = opcode_map[token];
+					uint8_t value = (high_bit << 4) | low_bit;
+
+					instructions.push_back(value);
+
+					stream >> token;
+					uint8_t value_8_bit = stoi(token);
+
+					instructions.push_back(value_8_bit);
+				}
+				else if (token.find("nop") != string::npos || token.find("hlt") != string::npos || token.find("clc") != string::npos || token.find("stc") != string::npos || token.find("iac") != string::npos || token.find("dac") != string::npos || token.find("clb") != string::npos) {
 					instructions.push_back(opcode_map[token]);
 				}
+				else if (token.find("jun") != string::npos || token.find("jms") != string::npos) {
+					int8_t value = opcode_map[token];
+					instructions.push_back(value);
+
+					stream >> token;
+					int16_t address = commands[token] & 0xFFF;
+
+					instructions.push_back(address);
+				}
+				else if (token.find("inc") != string::npos || token.find("xch") != string::npos || token.find("add") != string::npos || token.find("sub") != string::npos || token == "ld") {
+					uint8_t temp_value = opcode_map[token];
+
+					uint8_t high_bit = temp_value;
+					stream >> token;
+
+					uint8_t low_bit = opcode_map[token];
+					uint8_t value = (high_bit << 4) | low_bit;
+
+					instructions.push_back(value);
+				}
 				else {
-					instructions.push_back(static_cast<uint8_t>(std::stoi(token)));
+					uint8_t temp_value = opcode_map[token];
+
+					uint8_t high_bit = temp_value;
+					stream >> token;
+
+					uint8_t low_bit = stoi(token);
+					uint8_t value = (high_bit << 4) | low_bit;
+
+					instructions.push_back(value);
 				}
 			}
-			catch (...) {
+			else {
 				instructions.push_back(commands[token]);
 			}
 		}
@@ -294,47 +356,36 @@ public:
 	}
 
 	int run() {
-		uint16_t opcode = rom[p.pc];
+		uint8_t opcode = rom[p.pc];
+		uint8_t opcode_4_bit = (opcode << 4);
+		uint8_t opcode_8_bit = opcode;
+
+		uint8_t value_4_bit = (opcode >> 4) & 0xF;
+
 		while (is_halted != true && p.pc < instructions.size()) {
+
+			opcode_4_bit = opcode >> 4;
+			opcode_8_bit = opcode;
+			value_4_bit = opcode & 0xF;
+
 			if (stack.size() > 7) {
 				for (size_t i = 0; i < 5; i++) {
 					stack[i] = stack[i + 1];
 				}
 				stack.pop_back();
 			}
-			switch (opcode) {
-			case hlt: {
-				is_halted = true;
-
-				break;
+			if (commands_support.find(p.pc) != commands_support.end()) {
+				opcode = rom[++p.pc];
+				continue;
 			}
+			switch (opcode_4_bit) {
 			case ldm: {
-				if (rom[++p.pc] > 15) {
-					carry = true;
-				}
-				a.ac = rom[p.pc];
-
-				break;
-			}
-			case clc: {
-				carry = false;
-
-				break;
-			}
-			case stc: {
-				carry = true;
-
-				break;
-			}
-			case jun: {
-				int address = rom[++p.pc] - 1;
-
-				p.pc = address;
+				a.ac = value_4_bit;
 
 				break;
 			}
 			case jcn: {
-				int condition = rom[++p.pc];
+				int condition = value_4_bit;
 				int address = rom[++p.pc] - 1;
 
 				if (carry == false) {
@@ -385,34 +436,25 @@ public:
 				break;
 			}
 			case isz: {
-				int value = rom[++p.pc];
+				int value = value_4_bit;
 				int address = rom[++p.pc] - 1;
 
-				++rr[value - 64386];
+				++rr[value];
 
-				rr[value - 64386] &= 0xF;
+				rr[value] &= 0xF;
 
-				if (rr[value - 64386] == 0) {
+				if (rr[value] == 0) {
 					p.pc = address;
 				}
 
 				break;
 			}
 			case fim: {
-				int r_pair = rom[++p.pc];
+				int r_pair = value_4_bit;
 				uint8_t value = rom[++p.pc];
 
-				rr[r_pair - 64386] = value & 0xF;
-				rr[r_pair - 64386 + 1] = (value >> 4) & 0xF;
-
-				break;
-			}
-			case jms: {
-				stack.push_back(p.pc + 1);
-
-				int value = rom[++p.pc] - 1;
-
-				p.pc = value;
+				rr[r_pair] = value & 0xF;
+				rr[r_pair + 1] = (value >> 4) & 0xF;
 
 				break;
 			}
@@ -425,23 +467,17 @@ public:
 
 				break;
 			}
-			case clb: {
-				a.ac = 0;
-				carry = false;
-
-				break;
-			}
 			case ld: {
-				a.ac = rr[rom[++p.pc] - 64386];
+				a.ac = rr[value_4_bit];
 
 				break;
 			}
 			case add: {
-				int value = rom[++p.pc];
+				int value = value_4_bit;
 				int ac = a.ac;
 
-				ac += rr[value - 64386];
-				value = rr[value - 64386];
+				a.ac += rr[value];
+				value = rr[value];
 
 				if (ac + value > 15) {
 					carry = true;
@@ -453,12 +489,12 @@ public:
 				break;
 			}
 			case inc: {
-				int value = rom[++p.pc];
+				int value = value_4_bit;
 				int result;
 
-				result = rr[value - 64386];
-				++rr[value - 64386];
-				rr[value - 64386] &= 0xF;
+				result = rr[value];
+				++rr[value];
+				rr[value] &= 0xF;
 
 				if (++result > 15) {
 					carry = true;
@@ -469,6 +505,47 @@ public:
 
 				break;
 			}
+			case xch: {
+				int value = value_4_bit;
+
+				uint8_t temp = a.ac;
+				a.ac = rr[value];;
+				rr[value] = temp;
+
+				break;
+			}
+			case sub: {
+				int value = value_4_bit;
+				int8_t result = a.ac;
+
+				a.ac -= rr[value];
+				value = rr[value];
+
+				if (result - value < 0) {
+					carry = true;
+				}
+				else {
+					carry = false;
+				}
+
+				break;
+			}
+			default:
+				break;
+			}
+
+			switch (opcode_8_bit) {
+			case hlt: {
+				is_halted = true;
+
+				break;
+			}
+			case clb: {
+				a.ac = 0;
+				carry = false;
+
+				break;
+			} 
 			case dac: {
 				uint8_t value = a.ac;
 				if (--value < 0) {
@@ -494,33 +571,32 @@ public:
 
 				break;
 			}
-			case xch: {
-				int value = rom[++p.pc];
-
-				uint8_t temp = a.ac;
-				a.ac = rr[value - 64386];;
-				rr[value - 64386] = temp;
+			case clc: {
+				carry = false;
 
 				break;
 			}
-			case sub: {
-				int value = rom[++p.pc];
-				int8_t result = a.ac;
-
-				a.ac -= rr[value - 64386];
-				value = rr[value - 64386];;
-
-				if (result - value < 0) {
-					carry = true;
-				}
-				else {
-					carry = false;
-				}
+			case stc: {
+				carry = true;
 
 				break;
 			}
-			default:
+			case jun: {
+				int address = rom[++p.pc] - 1;
+
+				p.pc = address;
+
 				break;
+			}
+			case jms: {
+				stack.push_back(p.pc + 1);
+
+				int value = rom[++p.pc] - 1;
+
+				p.pc = value;
+
+				break;
+			}
 			}
 
 			opcode = rom[++p.pc];

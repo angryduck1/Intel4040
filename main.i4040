@@ -1,3 +1,5 @@
 main:
-  stc
-  ldm 10
+  ldm 9
+  xch rr0
+  ldm 9
+  add rr0

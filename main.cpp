@@ -25,8 +25,11 @@ int main() {
 		else if (point_pos != string::npos) {
 			auto label = line.substr(0, line.find(":"));
 			if (commands.find(label) == commands.end()) {
-				++pre_pc;
+				if (pre_pc != 0) {
+					++pre_pc;
+				}
 				commands[label] = pre_pc;
+				commands_support[pre_pc] = ++label_support;
 				asm_code += label + "\n";
 				continue;
 			}
@@ -35,15 +38,16 @@ int main() {
 			asm_code += line + "\n";
 		}
 
-		if (line.find("jcn") != string::npos || line.find("isz") != string::npos) {
-			pre_pc += 3;
+		if (line.find("jcn") != string::npos || line.find("isz") != string::npos || line.find("jun") != string::npos || line.find("jms") != string::npos) {
+			pre_pc += 2;
 		}
 		else if (line.find("nop") != string::npos || line.find("hlt") != string::npos || line.find("clc") != string::npos || line.find("stc") != string::npos || line.find("iac") != string::npos || line.find("dac") != string::npos || line.find("clb") != string::npos) {
 			++pre_pc;
 		}
 		else {
-			pre_pc += 2;
+			pre_pc += 1;
 		}
+
 	}
 
 	em.load_program(em.assemble(asm_code));
