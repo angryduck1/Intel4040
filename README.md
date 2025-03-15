@@ -1,3 +1,1 @@
-# Intel4040
-
-Emulator Intel 4040
+# Intel4040 Emulator
