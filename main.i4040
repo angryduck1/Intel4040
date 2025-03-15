@@ -10,4 +10,8 @@ main:
 
   wrm
 
+  ldm 9
+
+  rdm
+
   hlt

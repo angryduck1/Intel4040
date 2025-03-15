@@ -135,6 +135,7 @@ map<string, Assembler> opcode_map = {
 	{"ld", ld},
 	{"clb", clb},
 	{"wrm", wrm},
+	{"rdm", rdm},
 	{"wr0", wr0},
 	{"wr1", wr1},
 	{"wr2", wr2},
@@ -235,7 +236,7 @@ public:
 
 					instructions.push_back(value_8_bit);
 				}
-				else if (token.find("nop") != string::npos || token.find("hlt") != string::npos || token.find("clc") != string::npos || token.find("stc") != string::npos || token.find("iac") != string::npos || token.find("dac") != string::npos || token.find("clb") != string::npos || token.find("wrm") != string::npos || token.find("rdm") != string::npos || token.find("wr0") != string::npos || token.find("wr1") != string::npos || token.find("wr2") != string::npos || token.find("wr3") != string::npos) {
+				else if (token.find("nop") != string::npos || token.find("hlt") != string::npos || token.find("clc") != string::npos || token.find("stc") != string::npos || token.find("iac") != string::npos || token.find("dac") != string::npos || token.find("clb") != string::npos || token.find("wrm") != string::npos || token == "rdm" || token.find("wr0") != string::npos || token.find("wr1") != string::npos || token.find("wr2") != string::npos || token.find("wr3") != string::npos) {
 					instructions.push_back(opcode_map[token]);
 				}
 				else if (token.find("jun") != string::npos || token.find("jms") != string::npos) {
