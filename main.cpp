@@ -16,6 +16,9 @@ int main() {
 	string asm_code;
 
 	while (getline(inFile, line)) {
+		if (line == "") {
+			continue;
+		}
 		auto comment_pos = line.find(";");
 		auto point_pos = line.find(":");
 		if (comment_pos != string::npos) {
@@ -38,37 +41,50 @@ int main() {
 			asm_code += line + "\n";
 		}
 
-		if (line.find("jcn") != string::npos || line.find("isz") != string::npos || line.find("jun") != string::npos || line.find("jms") != string::npos) {
+		if (line.find("jcn") != string::npos || line.find("isz") != string::npos || line.find("jun") != string::npos || line.find("jms") != string::npos || line.find("fim") != string::npos) {
 			pre_pc += 2;
-		}
-		else if (line.find("nop") != string::npos || line.find("hlt") != string::npos || line.find("clc") != string::npos || line.find("stc") != string::npos || line.find("iac") != string::npos || line.find("dac") != string::npos || line.find("clb") != string::npos) {
-			++pre_pc;
 		}
 		else {
 			pre_pc += 1;
+		}
+
+		if (line.find("hlt") != string::npos || line.find("bbs") != string::npos || line.find("lcr") != string::npos || line.find("or4") != string::npos || line.find("or5") != string::npos || line.find("an6") != string::npos || line.find("an7") != string::npos || line.find("db0") != string::npos || line.find("db1") != string::npos || line.find("sb0") != string::npos || line.find("sb1") != string::npos || line.find("ein") != string::npos || line.find("din") != string::npos || line.find("rpm") != string::npos) {
+			if (pre_pc == 0) {
+				subgroup_command[0] = 2;
+			}
+			else {
+				subgroup_command[pre_pc] = 2;
+			}
+		}
+		else if (line.find("src") != string::npos || line.find("wrm") != string::npos || line.find("wmp") != string::npos || line.find("wrr") != string::npos || line.find("wpm") != string::npos || line.find("wr0") != string::npos || line.find("wr1") != string::npos || line.find("wr2") != string::npos || line.find("wr3") != string::npos || line.find("sbm") != string::npos || line.find("rdm") != string::npos || line.find("rdr") != string::npos || line.find("adm") != string::npos || line.find("rd0") != string::npos || line.find("rd1") != string::npos || line.find("rd2") != string::npos || line.find("rd3") != string::npos) {
+			if (pre_pc == 0) {
+				subgroup_command[0] = 3;
+			}
+			else {
+				subgroup_command[pre_pc] = 3;
+			}
+		}
+		else if (line.find("jcn") != string::npos || line.find("isz") != string::npos || line.find("jun") != string::npos || line.find("jms") != string::npos || line.find("fim") != string::npos) {
+			if (pre_pc == 1) {
+				subgroup_command[0] = 1;
+			}
+			else {
+				subgroup_command[pre_pc - 1] = 1;
+			}
+		}
+		else {
+			if (pre_pc == 0) {
+				subgroup_command[0] = 1;
+			}
+			else {
+				subgroup_command[pre_pc] = 1;
+			}
 		}
 
 	}
 
 	em.load_program(em.assemble(asm_code));
 	em.run();
-
-	//
-
-	cout << "RR0-RR1 " << em.get_rr0() << " " << em.get_rr1() << " ACC " << em.get_acc() << endl;
-	cout << "RR2-RR3 " << em.get_rr2() << " " << em.get_rr3() << " CARRY " << em.get_carry() << endl;
-	cout << "RR4-RR5 " << em.get_rr4() << " " << em.get_rr5() << endl;
-	cout << "RR6-RR7 " << em.get_rr6() << " " << em.get_rr7() << endl;
-	cout << "RR8-RR9 " << em.get_rr8() << " " << em.get_rr9() << endl;
-	cout << "RR10-RR11 " << em.get_rr10() << " " << em.get_rr11() << endl;
-	cout << "RR12-RR13 " << em.get_rr12() << " " << em.get_rr13() << endl;
-	cout << "RR14-RR15 " << em.get_rr14() << " " << em.get_rr15() << endl;
-	cout << "RR16-RR17 " << em.get_rr16() << " " << em.get_rr17() << endl;
-	cout << "RR18-RR19 " << em.get_rr18() << " " << em.get_rr19() << endl;
-	cout << "RR20-RR21 " << em.get_rr20() << " " << em.get_rr21() << endl;
-	cout << "RR22-RR23 " << em.get_rr22() << " " << em.get_rr23() << endl;
-
-	//
 
 	return 0;
 }

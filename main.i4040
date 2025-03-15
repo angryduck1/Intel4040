@@ -1,5 +1,13 @@
 main:
-  ldm 9
+  ldm 0
   xch rr0
-  ldm 9
-  add rr0
+  ldm 10
+  xch rr1
+
+  src rr0
+
+  ldm 15
+
+  wrm
+
+  hlt
